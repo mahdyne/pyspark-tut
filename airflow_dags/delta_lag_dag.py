@@ -22,7 +22,7 @@ dag = DAG(dag_id='delta_lag_dag',
           catchup=False,
           schedule_interval="30 * * * *")
 pyspark_app_home=Variable.get("PYSPARK_APP_HOME")
-delta_lag_alert= SparkSubmitOperator(task_id='clickstream_delta_lag_alert',
+click_stream_delta_lag_alert= SparkSubmitOperator(task_id='clickstream_delta_lag_alert',
                                      conn_id='spark_local',
                                      application=f'{pyspark_app_home}/spark/delta_lag.py',
                                      total_executor_cores=4,
