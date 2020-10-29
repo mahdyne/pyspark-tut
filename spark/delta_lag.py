@@ -11,7 +11,6 @@ sparkSession = SparkSession.builder \
     .config("spark.driver.maxResultSize", "2000m") \
     .config("spark.sql.shuffle.partitions", 4) \
     .getOrCreate()
-sparkSession.sparkContext.setLogLevel('WARN')
 def check_lag(delta_path:str,timestamp_column:str,threshold_in_min:int):
     df = sparkSession.read.format("delta").load(delta_path)
     latest_ts=df.select(max(col(timestamp_column))).first()[0]
