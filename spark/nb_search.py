@@ -1,7 +1,7 @@
 import datetime
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lit, avg, date_format
-from pyspark.sql.types import DoubleType, TimestampType
+from pyspark.sql.functions import col, lit, avg, date_format,concat
+from pyspark.sql.types import DoubleType, TimestampType, DateType
 
 sparkSession = SparkSession.builder \
     .config("spark.driver.maxResultSize", "2000m") \
@@ -13,13 +13,15 @@ pg_data_url = "jdbc:postgresql://192.168.10.10:5432/dw"
 pg_data_user = "report"
 pg_data_password = "789456123"
 pg_driver = 'org.postgresql.Driver'
-result_dataset = "flight_search_waiting_time"
-def flight_search_waiting_time():
+result_dataset = "flight_search_count"
+def flight_search_count():
     search_waiting_time = sparkSession.read.format("delta").load(delta_path) \
-        .select(col("channel"),
-                date_format("searched_at","yyyy-MM-dd H:00:00").cast(TimestampType()).alias("date_hour"),
-                lit(col("responsed_at").cast(DoubleType())-col("searched_at").cast(DoubleType())).alias("diff")) \
-        .groupBy("date_hour","channel").agg(avg(col("diff")).alias("waiting_time_in_sec"))
+        .select(col("searched_at").cast(DateType()).alias("date"),
+                concat(col("origin"),'-',col("destination")).alias("route"),
+                col("channel"),
+                col("departure_date"))\
+        .groupBy('date','route','channel')\
+        .count()
     search_waiting_time.write.format("jdbc") \
         .option("driver", pg_driver) \
         .option("url", pg_data_url) \
@@ -33,7 +35,7 @@ def flight_search_waiting_time():
 
 
 def main():
-    flight_search_waiting_time()
+    flight_search_count()
 
 
 if __name__ == '__main__':
